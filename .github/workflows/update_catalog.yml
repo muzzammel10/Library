@@ -1,0 +1,71 @@
+name: Update Book Catalog
+
+on:
+  push:
+    paths:
+      - '*.txt' # শুধুমাত্র txt ফাইল আপলোড করলেই রোবট চালু হবে
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Generate Catalog JSON
+      run: |
+        python3 -c '
+        import os
+        import json
+        import urllib.parse
+
+        books = []
+        repo_owner = "muzzammel10"
+        repo_name = "Library"
+        branch = "main"
+
+        # বর্তমান ফোল্ডারে ফাইলগুলো খোঁজা হচ্ছে
+        for filename in os.listdir("."):
+            if filename.endswith(".txt"):
+                # নামের ফরম্যাট: ক্যাটাগরি_বইয়ের নাম_লেখক.txt
+                raw_name = filename[:-4]
+                parts = raw_name.split("_")
+                
+                category = "বিবিধ"
+                title = raw_name
+                author = "অজানা"
+
+                if len(parts) >= 3:
+                    category = parts[0]
+                    title = parts[1]
+                    author = parts[2]
+                elif len(parts) == 2:
+                    title = parts[0]
+                    author = parts[1]
+
+                # লিংক তৈরি (Raw GitHub Link)
+                safe_filename = urllib.parse.quote(filename)
+                raw_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/{branch}/{safe_filename}"
+
+                books.append({
+                    "title": title.strip(),
+                    "author": author.strip(),
+                    "category": category.strip(),
+                    "url": raw_url
+                })
+
+        # catalog.json ফাইলে সেভ করা
+        with open("catalog.json", "w", encoding="utf-8") as f:
+            json.dump(books, f, ensure_ascii=False, indent=2)
+        '
+
+    - name: Commit and Push changes
+      run: |
+        git config --global user.name "GitHub Action Bot"
+        git config --global user.email "actions@github.com"
+        git add catalog.json
+        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto update catalog" && git push)
