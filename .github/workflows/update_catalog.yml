@@ -3,7 +3,7 @@ name: Update Book Catalog
 on:
   push:
     paths:
-      - '*.txt' # শুধুমাত্র txt ফাইল আপলোড করলেই রোবট চালু হবে
+      - '*.md' # শুধুমাত্র txt ফাইল আপলোড করলেই রোবট চালু হবে
   workflow_dispatch:
 
 permissions:
@@ -30,9 +30,9 @@ jobs:
 
         # বর্তমান ফোল্ডারে ফাইলগুলো খোঁজা হচ্ছে
         for filename in os.listdir("."):
-            if filename.endswith(".txt"):
+            if filename.endswith(".md"):
                 # নামের ফরম্যাট: ক্যাটাগরি_বইয়ের নাম_লেখক.txt
-                raw_name = filename[:-4]
+                raw_name = filename[:-3]
                 parts = raw_name.split("_")
                 
                 category = "বিবিধ"
